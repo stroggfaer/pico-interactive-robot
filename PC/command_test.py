@@ -1,53 +1,50 @@
-from PIL import Image, ImageDraw
+import serial
+import time
+import json
 
-# Определяем матрицу, которая будет служить данными для пикселей
-matrix = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-]
-matrix_a = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-]
+# Подключение к Pico через USB
+PORT = 'COM5'
+BAUDRATE = 115200
+ser = serial.Serial(PORT, 921600, timeout=1)
 
-# Размер изображения
-block_size = 20  # Размер каждого "пикселя"
-width, height = len(matrix[0]) * block_size, len(matrix) * block_size  # Размер всего изображения
+time.sleep(2)
 
-# Создаем изображение размером, соответствующим матрице
-img = Image.new('RGB', (width, height), (0, 0, 0))  # Черный фон
-draw = ImageDraw.Draw(img)
+# Читаем начальное сообщение от Pico
+initial = ser.readline().decode('utf-8').strip()
+print(f"Initial: {initial}")
 
-# Рисуем каждый "пиксель" в матрице
-for y in range(len(matrix)):
-    for x in range(len(matrix[0])):
-        color = (255, 255, 255) if matrix[y][x] == 1 else (0, 0, 0)
-        draw.rectangle([x * block_size, y * block_size,
-                        (x + 1) * block_size, (y + 1) * block_size],
-                       fill=color)
+# Функция для отправки команды
+def send_command(command_json):
+    ser.write((command_json + "\r\n").encode('utf-8'))
+    print(f"Sent: {command_json}")
+    time.sleep(0.5)  # Даём время Pico обработать
+    response = ser.readline().decode('utf-8').strip()
+    print(f"Response: {response}")
 
-# Сохраняем изображение
-img.save('pixel_art.png')
+# Пример отправки начальной команды
+initial_command = '{"emotion": "neutral", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера.", "mouth_speed": 0.5, "duration": 2, "intensity": 1.0, "volume": 1.25}'
 
-# Показываем изображение
-img.show()
+send_command(initial_command)
+
+# Цикл для ввода JSON-команд через терминал
+while True:
+    try:
+        print("Type 'q' to exit")
+        command_input = input("> ").strip()
+        
+        if command_input.lower() == 'q':
+            break
+        
+        # Проверяем, что ввели валидный JSON
+        try:
+            json.loads(command_input)  # Проверка синтаксиса
+            send_command(command_input)
+           # time.sleep(2)  # Даём время увидеть результат (можно настроить)
+        except json.JSONDecodeError as e:
+            print(f"Invalid JSON: {e}")
+    
+    except Exception as e:
+        print(f"Error: {e}")
+
+ser.close()
+print("Connection closed")

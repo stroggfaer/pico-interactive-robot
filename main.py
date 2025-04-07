@@ -140,6 +140,9 @@ def read_last_command():
             last = line
     return last
 
+def is_valid_command(command):
+    return isinstance(command, dict) and "emotion" in command
+
 def main():
     global current_emotion, current_duration, current_intensity
     global current_text, current_mouth_speed, emotion_timer, anim_duration
@@ -158,6 +161,11 @@ def main():
                 print(f"Raw input: '{command_json}'")
                 try:
                     command = json.loads(command_json)
+
+                    if not is_valid_command(command):
+                        print("⚠️ Invalid command structure")
+                        continue
+
                     new_emotion = command.get("emotion", "neutral")
                     current_duration = float(command.get("duration", 2.0))
                     current_intensity = float(command.get("intensity", 1.0))
@@ -165,20 +173,23 @@ def main():
                     current_text = command.get("text", None)
                     volume = float(command.get("volume", 0.3))
                     anim_duration = float(command.get("anim_duration", 5.0))
+
                     print(f"Parsed command: emotion={new_emotion}, duration={current_duration}, intensity={current_intensity}, text='{current_text}', mouth_speed={current_mouth_speed}")
 
                     if new_emotion != current_emotion or command.get("text") != current_text:
+                        if new_emotion not in emotions:
+                            print(f"[ERROR] Emotion '{new_emotion}' not defined, using 'neutral'")
+                            new_emotion = "neutral"
                         current_emotion = new_emotion
                         current_text = command.get("text", None)
                         reset_emotion_state(current_emotion)
-                        if current_emotion not in emotions:
-                            print(f"[ERROR] Emotion {current_emotion} not defined, defaulting to neutral")
-                            current_emotion = "neutral"
                         if tft:
                             emotion_states[current_emotion] = emotions[current_emotion](current_intensity)
 
+                except json.JSONDecodeError as e:
+                    print(f"⚠️ JSON decode error: {e}")
                 except Exception as e:
-                    print(f"⚠️ JSON parse error: {e}")
+                    print(f"⚠️ Command parse error: {e}")
 
             if tft:
                 emotion_states[current_emotion] = emotions[current_emotion](current_intensity)
