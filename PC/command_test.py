@@ -22,7 +22,7 @@ def send_command(command_json):
     print(f"Response: {response}")
 
 # Пример отправки начальной команды
-initial_command = '{"emotion": "neutral", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера.", "mouth_speed": 0.5, "duration": 2, "intensity": 1.0, "volume": 1.25}'
+initial_command = '{"emotion": "neutral", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера. Под Лунным Деревом жила маленькая девочка по имени Лера."}'
 
 send_command(initial_command)
 
