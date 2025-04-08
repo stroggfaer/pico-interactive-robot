@@ -9,6 +9,7 @@ ser = serial.Serial(PORT, 921600, timeout=1)
 
 time.sleep(2)
 
+
 # Читаем начальное сообщение от Pico
 initial = ser.readline().decode('utf-8').strip()
 print(f"Initial: {initial}")
