@@ -21,7 +21,7 @@ def send_command(command_json):
     response = ser.readline().decode('utf-8').strip()
     print(f"Response: {response}")
 
-# Пример отправки начальной команды
+
 initial_command = '{"emotion": "neutral", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера. Под Лунным Деревом жила маленькая девочка по имени Лера."}'
 
 send_command(initial_command)
