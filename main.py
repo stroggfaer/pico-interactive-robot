@@ -45,7 +45,7 @@ current_intensity = 1.0
 current_text = None
 current_mouth_speed = 0.8
 emotion_timer = 0
-anim_duration = 15 
+anim_duration = 15
 
 emotion_states = {
     name: reset_state(name)
@@ -90,7 +90,7 @@ emotions = {
     ) if tft else None,
     "sad": lambda i: sad_pixel(
         speed=current_mouth_speed * i,
-        state=emotion_states["happy"],
+        state=emotion_states["sad"],
         duration=anim_duration,
     ) if tft else None,
     "surprise": lambda i: surprise_pixel(
@@ -123,8 +123,11 @@ def play_tone(frequency, duration=0.15, volume=0.3):
         audio_buffer[i * 2] = sample & 0xFF
         audio_buffer[i * 2 + 1] = (sample >> 8) & 0xFF
 
-    audio_out.write(audio_buffer)
-    print(f"🎵 Played tone: {frequency} Hz, {duration} sec, volume: {volume}")
+    try:  # ✅ Добавлен try вокруг записи
+        audio_out.write(audio_buffer)
+        print(f"🎵 Played tone: {frequency} Hz, {duration} sec, volume: {volume}")
+    except Exception as e:
+        print(f"⚠️ Audio write error: {e}")
 
 def reset_emotion_state(emotion):
     global emotion_timer
@@ -143,9 +146,12 @@ def read_last_command():
 def is_valid_command(command):
     return isinstance(command, dict) and "emotion" in command
 
+last_emotion_time = time.time()  # время последнего обновления эмоции
+
 def main():
     global current_emotion, current_duration, current_intensity
     global current_text, current_mouth_speed, emotion_timer, anim_duration
+    global last_emotion_time  
 
     print("Pico started, waiting for JSON commands...")
 
@@ -153,6 +159,8 @@ def main():
         tft.fill(st7789.BLACK)
         reset_emotion_state(current_emotion)
         emotion_states[current_emotion] = emotions[current_emotion](current_intensity)
+
+    new_command_received = False  # ✅ флаг нового поступления
 
     while True:
         try:
@@ -176,27 +184,33 @@ def main():
 
                     print(f"Parsed command: emotion={new_emotion}, duration={current_duration}, intensity={current_intensity}, text='{current_text}', mouth_speed={current_mouth_speed}")
 
-                    if new_emotion != current_emotion or command.get("text") != current_text:
-                        if new_emotion not in emotions:
-                            print(f"[ERROR] Emotion '{new_emotion}' not defined, using 'neutral'")
-                            new_emotion = "neutral"
-                        current_emotion = new_emotion
-                        current_text = command.get("text", None)
-                        reset_emotion_state(current_emotion)
-                        if tft:
-                            emotion_states[current_emotion] = emotions[current_emotion](current_intensity)
+                    if new_emotion not in emotions:
+                        print(f"[ERROR] Emotion '{new_emotion}' not defined, using 'neutral'")
+                        new_emotion = "neutral"
+
+                    # ✅ Всегда обновляем состояние при новой команде
+                    current_emotion = new_emotion
+                    new_command_received = True
 
                 except json.JSONDecodeError as e:
                     print(f"⚠️ JSON decode error: {e}")
                 except Exception as e:
                     print(f"⚠️ Command parse error: {e}")
 
+            if new_command_received and time.time() - last_emotion_time > 0.5:
+                if tft:
+                    #tft.fill(st7789.BLACK)  # ✅ Очистка экрана перед новой эмоцией
+                    reset_emotion_state(current_emotion)
+                    emotion_states[current_emotion] = emotions[current_emotion](current_intensity)
+                    print(f"[SWITCH] Switching to {current_emotion}")
+                last_emotion_time = time.time()
+                new_command_received = False
+
             if tft:
                 emotion_states[current_emotion] = emotions[current_emotion](current_intensity)
 
-                if ("talking" in emotion_states[current_emotion] and 
-                    not emotion_states[current_emotion]["talking"] and 
-                    current_text is not None):
+                # ✅ Защищённый доступ к флагу talking
+                if not emotion_states[current_emotion].get("talking") and current_text is not None:
                     current_text = None
 
             if time.time() - emotion_timer >= current_duration:
@@ -205,9 +219,10 @@ def main():
                     current_text = None
                     if tft:
                         reset_emotion_state(current_emotion)
+                        emotion_states[current_emotion] = emotions[current_emotion](current_intensity)
+                        print("[TIMEOUT] Auto switch to neutral")
 
-            if ("animating" in emotion_states[current_emotion] and 
-                not emotion_states[current_emotion]["animating"]):
+            if not emotion_states[current_emotion].get("animating", True):
                 anim_duration = 0
 
             time.sleep(0.1)
@@ -218,3 +233,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
