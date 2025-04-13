@@ -54,7 +54,7 @@ def draw_matrix(matrix, pixel_size=PIXEL_SIZE, force_redraw=False):
 def count_syllables(text):
     return sum(1 for char in text if char.lower() in VOWELS) or 1
 
-def talking_logic(state, text, speed=0.5, mouth_speed=0.1, open_mouth_matrix=None, closed_mouth_matrix=None, neutral_matrix=None):
+def talking_logic(state, text, duration=1.0, speed=1.0, mouth_speed=1.0, open_mouth_matrix=None, closed_mouth_matrix=None, neutral_matrix=None):
     if open_mouth_matrix is None or closed_mouth_matrix is None:
         print("[ERROR] Required matrices for talking_logic are missing")
         return state
@@ -67,14 +67,16 @@ def talking_logic(state, text, speed=0.5, mouth_speed=0.1, open_mouth_matrix=Non
         state["last_frame"] = current_time
         state["frame"] = 0
         state["syllables"] = count_syllables(text)
+        speech_duration = duration * 1000  # Переводим duration из секунд в миллисекунды
         reset_matrix()
-        print(f"[DEBUG] Начало разговора: '{text}'")
+        print(f"[DEBUG] Начало разговора: '{text}', duration: {speech_duration} ms")
 
     if state.get("talking", False):
-        speech_duration = state["syllables"] * 120
+        speech_duration = duration * 1000  # Используем переданный duration
         elapsed_time = utime.ticks_diff(current_time, state["start_time"])
 
         if elapsed_time < speech_duration:
+            # Частота кадров: делим длительность на количество слогов
             frame_duration = (speech_duration // state["syllables"]) * mouth_speed
             if utime.ticks_diff(current_time, state["last_frame"]) >= frame_duration:
                 state["frame"] = (state["frame"] + 1) % 2
@@ -92,6 +94,7 @@ def talking_logic(state, text, speed=0.5, mouth_speed=0.1, open_mouth_matrix=Non
         utime.sleep_ms(int(speed * 100))
 
     return state
+
 
 def anime_logic(state, speed=0.5, duration=2.0, matrix_start=None, matrix_anim_a=None, matrix_anim_b=None, matrix_anim_c=None, matrix_end=None):
     current_time = time.time()
@@ -141,11 +144,6 @@ def anime_logic(state, speed=0.5, duration=2.0, matrix_start=None, matrix_anim_a
             time.sleep(1)
 
     return state
-
-def angry_talking_pixel(speed=0.5, state=None, text=None, mouth_speed=1.0):
-    if state is None:
-        state = get_talking_state()
-    return talking_logic(state, text, speed, mouth_speed, ANGRY_OPEN_MOUTH, ANGRY_CLOSED_MOUTH, ANGRY_CLOSED)
 
 def smile_love_pixel(speed=0.5, state=None, duration=5.0):
     if state is None:
@@ -266,8 +264,12 @@ def surprise_pixel(speed=0.3, state=None, duration=5.0):
         state = get_anim_state()
     return anime_logic(state, speed, duration, NEUTRAL_NO_BLINK, SURPRISE, SURPRISE, SURPRISE, NEUTRAL_NO_BLINK)
 
-def talking_pixel(speed=0.5, state=None, text=None, mouth_speed=0.5, emotion='neutral'):
+def talking_pixel(duration=1.0, speed=0.5, state=None, text=None, mouth_speed=0.5, emotion='neutral'):
     if state is None:
-        state = get_talking_state()
-    return talking_logic(state, text, speed, mouth_speed, TALKING_A, TALKING_B, NEUTRAL_NO_BLINK)
-
+        state = get_talking_state() 
+    if emotion == "neutral":
+        return talking_logic(state, text, duration, speed, mouth_speed, TALKING_A, TALKING_B, NEUTRAL_NO_BLINK)
+    elif emotion == "angry":
+        return talking_logic(state, text, duration, speed, mouth_speed, ANGRY_OPEN_MOUTH, ANGRY_CLOSED_MOUTH, ANGRY_CLOSED)
+    else:
+        return talking_logic(state, text, duration, speed, mouth_speed, TALKING_A, TALKING_B, NEUTRAL_NO_BLINK)

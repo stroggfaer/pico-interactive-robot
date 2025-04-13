@@ -1,8 +1,6 @@
 import random
 
-# Базовые состояния для эмоций
-def get_neutral_state():
-    return {
+NEUTRAL_STATE = {
         "last_blink": 0,
         "start_time": 0,
         "sleep_start": None,
@@ -13,31 +11,38 @@ def get_neutral_state():
         "blink_start": None,
         "matrix": True,
         "sleep_blink_phase": 0
-    }
+}
 
-def get_talking_state():
-    return {
+TALKING_STATE = {
         "talking": False,
         "frame": 0,
         "start_time": 0,
         "last_frame": 0,
         "emotion": 'neutral',
-    }
+        "syllables": 1
+}
 
-
-def get_anim_state():
-    return {
+ANIM_STATE = {
         "animating": False,
         "frame": 0,
         "start_time": 0,
         "last_frame": 0,
         "cycle_count": 0
-    }
+}
+
+# Базовые состояния для эмоций
+def get_neutral_state():
+    return dict(NEUTRAL_STATE)
+
+def get_talking_state():
+    return dict(TALKING_STATE)
+
+def get_anim_state():
+    return dict(ANIM_STATE)
 
 # Словарь начальных состояний для всех эмоций
 INITIAL_STATES = {
     "neutral": get_neutral_state,        # Нейтральное выражение лица
-    "angry_talking": get_talking_state,  # Злой разговор (анимация с движением рта)
     "smile": get_anim_state,             # Улыбка (анимация улыбки)
     "smile_love": get_anim_state,        # Улыбка с любовью (романтическая анимация)
     "embarrassed": get_anim_state,       # Смущение (анимация смущённого лица)
