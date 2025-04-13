@@ -1,6 +1,17 @@
 import serial
 import time
 import json
+import pyttsx3
+
+# Инициализация TTS
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+for voice in voices:
+    if 'russian' in voice.name.lower() or 'irina' in voice.name.lower():
+        engine.setProperty('voice', voice.id)
+        break
+engine.setProperty('rate', 150)
+
 
 # Подключение к Pico через USB
 PORT = 'COM5'
