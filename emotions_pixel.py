@@ -281,4 +281,3 @@ def talking_pixel(duration=1.0, speed=0.5, state=None, text=None, mouth_speed=0.
         return talking_logic(state, text, duration, speed, mouth_speed, HAPPY_CIRCLE, NEUTRAL_CIRCLE, NEUTRAL_NO_BLINK)
     else:
         return talking_logic(state, text, duration, speed, mouth_speed, TALKING_A, TALKING_B, NEUTRAL_NO_BLINK)
-
