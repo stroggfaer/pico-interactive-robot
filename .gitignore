@@ -1,3 +1,5 @@
 .idea/
 .venv/
+.temp/
 .git
+tts_env

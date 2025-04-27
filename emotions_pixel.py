@@ -67,12 +67,12 @@ def talking_logic(state, text, duration=1.0, speed=1.0, mouth_speed=1.0, open_mo
         state["last_frame"] = current_time
         state["frame"] = 0
         state["syllables"] = count_syllables(text)
-        speech_duration = duration * 1000  # Переводим duration из секунд в миллисекунды
+        speech_duration = duration * 1500  # Переводим duration из секунд в миллисекунды
         reset_matrix()
         print(f"[DEBUG] Начало разговора: '{text}', duration: {speech_duration} ms")
 
     if state.get("talking", False):
-        speech_duration = duration * 1000  # Используем переданный duration
+        speech_duration = duration * 1500  # Используем переданный duration
         elapsed_time = utime.ticks_diff(current_time, state["start_time"])
 
         if elapsed_time < speech_duration:
@@ -271,5 +271,14 @@ def talking_pixel(duration=1.0, speed=0.5, state=None, text=None, mouth_speed=0.
         return talking_logic(state, text, duration, speed, mouth_speed, TALKING_A, TALKING_B, NEUTRAL_NO_BLINK)
     elif emotion == "angry":
         return talking_logic(state, text, duration, speed, mouth_speed, ANGRY_OPEN_MOUTH, ANGRY_CLOSED_MOUTH, ANGRY_CLOSED)
+    elif emotion == "smile_tricky":
+        return talking_logic(state, text, duration, speed, mouth_speed, TALKING_TRICKY_A, TALKING_TRICKY_B, SMILE_A)
+    elif emotion == "tricky":
+        return talking_logic(state, text, duration, speed, mouth_speed, SMILE_TRICKY_A, SMILE_TRICKY_B, NEUTRAL_NO_BLINK)
+    elif emotion == "smile":
+        return talking_logic(state, text, duration, speed, mouth_speed, SMILE, TALKING_A, NEUTRAL_NO_BLINK)
+    elif emotion == "ha":
+        return talking_logic(state, text, duration, speed, mouth_speed, HAPPY_CIRCLE, NEUTRAL_CIRCLE, NEUTRAL_NO_BLINK)
     else:
         return talking_logic(state, text, duration, speed, mouth_speed, TALKING_A, TALKING_B, NEUTRAL_NO_BLINK)
+

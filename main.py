@@ -1,9 +1,11 @@
 import sys
 import select
+import machine
 import st7789py as st7789
 import tft_config
 import time
 import json
+import random
 import math
 from machine import I2S, Pin
 from states import reset_state, INITIAL_STATES
@@ -124,7 +126,7 @@ def play_tone(frequency, duration=0.15, volume=0.3):
 
 def reset_emotion_state(emotion):
     global emotion_timer
-    emotion_states[emotion] = reset_state(emotion) 
+    emotion_states[emotion] = reset_state(emotion)  # уже обновляет state по ссылке
     emotion_timer = time.time()
     print(f"[DEBUG] Reset state for {emotion}")
 
