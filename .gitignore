@@ -1,9 +1,9 @@
 .idea/
 .venv/
 .temp/
-.robot_voice/
-.voice/
-.PC_test/
+robot_voice/
+voice/
+PC_test
 .git
 tts_env
 .vscode
