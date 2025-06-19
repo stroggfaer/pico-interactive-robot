@@ -4,6 +4,7 @@ import time
 import json
 import os
 import pygame
+import wave
 
 # Конфигурация
 VOICE_DIR = r"D:\project\ard\RP2040\pico-interactive-robot\voice"
@@ -17,19 +18,74 @@ ser = serial.Serial(PORT, BAUDRATE, timeout=1)
 time.sleep(0.5)
 
 pygame.mixer.init(frequency=22050, size=-16, channels=1)
-#output_robot_1.wav
+
 AUDIO_TEXT_MAP = [
     {
-        "file": "output_robot_1.wav",
-        "text": "Внима-а-ние, бойцы-ы ретро-о-геймеры-ы!",
+        "file": "demo_output_robot.wav",
+        "text": "Привет! Я тестовый демонстрационный робот. Я умею говорить и показывать эмоции. Пока у меня нет микрофона, мы не сможем поговорить, но я всё равно рад тебя видеть! Если мне станет скучно — я могу даже уснуть. бойцы-ы ретро-о-геймеры-ы! ретроо геймеры!аааааааааааа ааа",
         "emotion": "talking",
         "talking_emotion": "neutral",
-        "mouth_speed": 1.0,
+        "mouth_speed": 1,
+        "duration": 6.0,
+        "anim_duration": 1
+    },
+    {
+        "file": "smile_output_robot.wav",
+        "text": "фффффффффффффффффффaaaaaa .... Ладно погнали что я умеюююbbbbbbb",
+        "emotion": "talking",
+        "talking_emotion": "neutral",
+        "mouth_speed": 1,
+        "duration": 2.0,
+        "anim_duration": 1
+    },
+    
+    {"emotion": "embarrassed", "duration": 5.0, "anim_duration": 5},
+    {"emotion": "smile_love", "duration": 5.0, "anim_duration": 5},
+    {"emotion": "scary", "duration": 5.0, "anim_duration": 5},
+    {"emotion": "happy", "duration": 5.0, "anim_duration": 5},
+    {"emotion": "sad", "duration": 5.0, "anim_duration": 5},
+    {"emotion": "surprise", "duration": 5.0, "anim_duration": 5},
+   {
+        "file": "end_output_robot.wav",
+        "text": "ssssssd я пошел спать Покаааsssss",
+        "emotion": "talking",
+        "talking_emotion": "neutral",
+        "mouth_speed": 1,
+        "duration": 6.0,
         "anim_duration": 1
     },
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # {"emotion": "scary", "duration": 20.0, "anim_duration": 8, "speed": 0.9},
+    # {
+    #     "file": "output_robot_test.wav",
+    #     "text": "Привет, ого, как же здорово тебя видеть! Я просто в восторге! иногда кажется, что эмоции — это океан, в котором мы учимся плавать всю жизнь. Мы радуемся, когда встречаем близких, и тоскуем, когда они уходят. Мы смеёмся до слёз, а потом, возможно, плачем от счастья. Всё это — часть нас, часть того, что делает нас живыми. Ахахаахха! уничтожить,уничтооожить, уничтожить!!!",
+    #     "emotion": "talking",
+    #     "talking_emotion": "neutral",
+    #     "mouth_speed": 0.6,
+    #     "duration": 6.0,
+    # },
+    #{"file": "1_robot.wav", "emotion": "talking", "talking_emotion": "smile", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера.", "mouth_speed": 0.6,},
     # {"file": "1_robot.wav", "emotion": "talking", "talking_emotion": "smile", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера.", "mouth_speed": 0.6,},
     # {"file": "1_robot.wav", "emotion": "talking", "talking_emotion": "angry", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера.", "mouth_speed": 0.6,},
     # {"file": "1_robot.wav", "emotion": "talking", "talking_emotion": "smile_tricky", "text": "Под Лунным Деревом жила маленькая девочка по имени Лера.", "mouth_speed": 1.5,},

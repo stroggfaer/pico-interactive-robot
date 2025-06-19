@@ -37,12 +37,12 @@ except Exception as e:
     print(f"⚠️ Ошибка I2S: {e}")
     audio_out = None
 
-current_emotion = "neutral" #neutral
+current_emotion = "neutral" #neutral talking
 talking_emotion = None #neutral angry
-current_duration = 3.0
-current_intensity = 1.0
+current_duration = 65.5 # test
+current_intensity = 0.4 # test
 current_text = None
-current_mouth_speed = 0.5
+current_mouth_speed = 0.5 # test
 emotion_timer = 0
 anim_duration = 5
 
@@ -97,32 +97,9 @@ emotions = {
         state=emotion_states["talking"],
         text=current_text,
         mouth_speed=current_mouth_speed,
-        emotion=talking_emotion
+        emotion=talking_emotion if talking_emotion else "neutral"
     ) if tft else None,
 }
-
-audio_buffer = bytearray(22050 * 2)
-
-def play_tone(frequency, duration=0.15, volume=0.3):
-    if not audio_out:
-        print("⚠️ Audio not initialized!")
-        return
-
-    volume = max(0.0, min(1.0, volume))
-    sample_rate = 22050
-    num_samples = int(sample_rate * duration)
-
-    for i in range(num_samples):
-        fade = 1.0 - (i / num_samples)
-        sample = int(32767 * volume * fade * math.sin(2 * math.pi * frequency * i / sample_rate))
-        audio_buffer[i * 2] = sample & 0xFF
-        audio_buffer[i * 2 + 1] = (sample >> 8) & 0xFF
-
-    try:
-        audio_out.write(audio_buffer[:num_samples * 2])
-        print(f"🎵 Played tone: {frequency} Hz, {duration} sec, volume: {volume}")
-    except Exception as e:
-        print(f"⚠️ Audio write error: {e}")
 
 def reset_emotion_state(emotion):
     global emotion_timer
@@ -147,7 +124,8 @@ def main():
     global current_emotion, current_duration, current_intensity
     global current_text, current_mouth_speed, emotion_timer, anim_duration
     global last_emotion_time, talking_emotion
-    #current_text = 'Не знаю, что сказать пока думаю или у меня мозги отключили'
+    # test
+    #current_text = 'Здо-о-о-рово, дру-у-у-ги! Сего-о-о-дня у нас о-о-о-чень крутой эфир! Победителей ждут крутые призы и незабываемые эмоции особненно кто проиграет. Не упустите шанс стать чемпионом или проигравший! Если получиться победить Rendzhi King'
     print("Pico started, waiting for JSON commands...")
 
     if tft:
@@ -233,4 +211,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

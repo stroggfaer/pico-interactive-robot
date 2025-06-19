@@ -29,7 +29,7 @@ def get_mp3_duration(file_path):
     audio = MP3(file_path)
     return audio.info.length
 
-def speak_and_send(text, intensity=1.0, volume=1.0, mouth_speed=0.6):
+def speak_and_send(text, intensity=1.0, volume=1.0, mouth_speed=0.2):
     if not text.strip():
         return
 

@@ -1,5 +1,8 @@
 .idea/
 .venv/
 .temp/
+.robot_voice/
+.voice/
 .git
 tts_env
+.vscode

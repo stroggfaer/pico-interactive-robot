@@ -40,15 +40,47 @@ def draw_matrix(matrix, pixel_size=PIXEL_SIZE, force_redraw=False):
     if force_redraw or prev_matrix is None:
         display.fill(STYLE_BG)
         prev_matrix = [[0] * len(matrix[0]) for _ in range(len(matrix))]
-
+        
+    # Find changed regions
+    changes = []
+    min_row = len(matrix)
+    max_row = 0
+    min_col = len(matrix[0])
+    max_col = 0
+    
     for row in range(len(matrix)):
         for col in range(len(matrix[row])):
             if matrix[row][col] != prev_matrix[row][col]:
+                changes.append((row, col))
+                min_row = min(min_row, row)
+                max_row = max(max_row, row)
+                min_col = min(min_col, col)
+                max_col = max(max_col, col)
+    
+    # If there are changes, update only the changed region
+    if changes and not force_redraw:
+        # Add some padding to the region to reduce artifacts
+        min_row = max(0, min_row - 1)
+        max_row = min(len(matrix) - 1, max_row + 1)
+        min_col = max(0, min_col - 1)
+        max_col = min(len(matrix[0]) - 1, max_col + 1)
+        
+        # Update the region in one go
+        region_width = (max_col - min_col + 1) * pixel_size
+        region_height = (max_row - min_row + 1) * pixel_size
+        x_start = X_OFFSET + min_col * pixel_size
+        y_start = Y_OFFSET + min_row * pixel_size
+        
+        # First fill the region with background color
+        display.fill_rect(x_start, y_start, region_width, region_height, STYLE_BG)
+        
+        # Then draw only the pixels that should be visible
+        for row, col in changes:
+            if matrix[row][col] == 1:  # Only draw visible pixels
                 x = X_OFFSET + col * pixel_size
                 y = Y_OFFSET + row * pixel_size
-                color = STYLE_FACE if matrix[row][col] == 1 else STYLE_BG
-                display.fill_rect(x, y, pixel_size, pixel_size, color)
-
+                display.fill_rect(x, y, pixel_size, pixel_size, STYLE_FACE)
+    
     prev_matrix = [row[:] for row in matrix]
 
 def count_syllables(text):

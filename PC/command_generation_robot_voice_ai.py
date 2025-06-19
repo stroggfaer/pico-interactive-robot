@@ -23,7 +23,7 @@ try:
     output_path = "robot_voice/output.wav"
 
     tts.tts_to_file(
-        text="Внима-а-ние, бойцы-ы ретро-о-геймеры-ы!",
+        text="Извини-те за мой французкий акцент.Ладно погнали что я умеююю",
         file_path=output_path,
         speaker_wav="robot_voice/voice.mp3",
         language="ru"

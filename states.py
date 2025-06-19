@@ -14,12 +14,15 @@ NEUTRAL_STATE = {
 }
 
 TALKING_STATE = {
-        "talking": False,
-        "frame": 0,
-        "start_time": 0,
-        "last_frame": 0,
-        "emotion": 'neutral',
-        "syllables": 1
+    "talking": False,          # Идёт ли сейчас разговор
+    "frame": 0,                # Номер текущего кадра анимации
+    "start_time": 0,           # Когда начался разговор
+    "last_frame": 0,           # Время последнего кадра
+    "emotion": "neutral",      # Текущая эмоция
+    "syllables": 1,            # Количество слогов в тексте
+    "program": [],             # Программа движений рта (open/half_open/closed)
+    "program_step": 0,         # Текущий шаг программы
+    "last_step_time": 0        # Время последнего переключения между состояниями рта
 }
 
 ANIM_STATE = {
