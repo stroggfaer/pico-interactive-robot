@@ -1,6 +1,6 @@
 .idea/
 .venv/
-.temp/
+temp/
 robot_voice/
 voice/
 PC_test/

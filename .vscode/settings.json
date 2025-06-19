@@ -13,5 +13,6 @@
         "~/.micropico-stubs/included"
     ],
     "python.defaultInterpreterPath": "D:/project/ard/RP2040/pico-interactive-robot/.venv/Scripts/python.exe",
-    "python.venvPath": "D:/project/ard/RP2040/pico-interactive-robot/.venv"
+    "python.venvPath": "D:/project/ard/RP2040/pico-interactive-robot/.venv",
+    "git.ignoreLimitWarning": true
 }
