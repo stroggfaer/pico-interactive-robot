@@ -59,6 +59,7 @@
     "talking_emotion": "neutral",
     "mouth_speed": 0.6
 }
+```
 
 ### Подключение: пины дисплея к Raspberry Pi Pico
 
