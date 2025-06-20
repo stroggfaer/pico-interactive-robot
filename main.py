@@ -20,23 +20,6 @@ except Exception as e:
     print(f"[ERROR] Failed to initialize TFT: {e}")
     tft = None
 
-try:
-    audio_out = I2S(
-        0,
-        sck=Pin(16),
-        ws=Pin(17),
-        sd=Pin(18),
-        mode=I2S.TX,
-        bits=16,
-        format=I2S.MONO,
-        rate=22050,
-        ibuf=1000
-    )
-    print("✅ I2S успешно инициализирован!")
-except Exception as e:
-    print(f"⚠️ Ошибка I2S: {e}")
-    audio_out = None
-
 current_emotion = "neutral" #neutral talking
 talking_emotion = None #neutral angry
 current_duration = 65.5 # test
