@@ -120,6 +120,7 @@ def is_valid_command(command):
 
 last_emotion_time = time.time()
 
+
 def main():
     global current_emotion, current_duration, current_intensity
     global current_text, current_mouth_speed, emotion_timer, anim_duration
@@ -190,6 +191,7 @@ def main():
 
             if time.time() - emotion_timer >= current_duration:
                 if current_emotion != "neutral":
+                    finished_emotion = current_emotion  # сохранить завершённую эмоцию
                     current_emotion = "neutral"
                     current_text = None
                     talking_emotion = None
@@ -197,6 +199,8 @@ def main():
                         reset_emotion_state(current_emotion)
                         emotions[current_emotion](current_intensity)
                         print("[TIMEOUT] Auto switch to neutral")
+                    # ОБРАТНЫЙ ВЫЗОВ ДЛЯ PC:
+                    print(json.dumps({"event": "emotion_finished", "emotion": finished_emotion}))
                     gc.collect()
 
             if not emotion_states[current_emotion].get("animating", True):
@@ -211,3 +215,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

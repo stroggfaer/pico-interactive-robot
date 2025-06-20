@@ -27,31 +27,97 @@ import contextlib
 from pydub import AudioSegment
 import scipy.io.wavfile as wavfile
 import numpy as np
+from requests.exceptions import HTTPError
+
+HAS_MODE_AI = False  # True — AI/микрофон, False — только AUDIO_TEXT_MAP
+#Test Эмоция;
+AUDIO_TEXT_MAP = [
+    {
+        "text": "Привет! Я интерактивный демонстрационный робот. Я умею говорить и показывать эмоции.",
+        "emotion": "talking",
+        "talking_emotion": "neutral",
+        "mouth_speed": 0.3,
+        "duration": 6.0,
+        "anim_duration": 1
+    },
+    # Характер эмоций для AUDIO_TEXT_MAP (только название характера)
+    { "text": "Грустный", "emotion": "sad", "duration": 5.0, "anim_duration": 5},
+    { "text": "Веселый", "emotion": "happy", "duration": 5.0, "anim_duration": 5},
+    { "text": "Страшный", "emotion": "scary", "duration": 5.0, "anim_duration": 5},
+    { "text": "Удивленный", "emotion": "surprise", "duration": 5.0, "anim_duration": 5},
+    { "text": "Смущенный", "emotion": "embarrassed", "duration": 5.0, "anim_duration": 5},
+    { "text": "Влюбленный", "emotion": "smile_love", "duration": 5.0, "anim_duration": 5},
+    # Примеры talking_emotion с разными вариантами
+    {
+        "text": "Я могу говорить с разными эмоциями. Сейчас я говорю сердито!",
+        "emotion": "talking",
+        "talking_emotion": "angry",
+        "mouth_speed": 0.7,
+        "duration": 4.0,
+        "anim_duration": 1
+    },
+    {
+        "text": "Посмотри, как я хитро улыбаюсь, когда говорю!",
+        "emotion": "talking",
+        "talking_emotion": "smile_tricky",
+        "mouth_speed": 0.5,
+        "duration": 4.0,
+        "anim_duration": 1
+    },
+    {
+        "text": "Я могу быть очень озорным, когда разговариваю!",
+        "emotion": "talking",
+        "talking_emotion": "tricky",
+        "mouth_speed": 0.6,
+        "duration": 4.0,
+        "anim_duration": 1
+    },
+    {
+        "text": "Я могу говорить с широкой улыбкой!",
+        "emotion": "talking",
+        "talking_emotion": "smile",
+        "mouth_speed": 0.8,
+        "duration": 4.0,
+        "anim_duration": 1
+    },
+    {
+        "text": "Ха-ха-ха! Я смеюсь и говорю одновременно!",
+        "emotion": "talking",
+        "talking_emotion": "ha",
+        "mouth_speed": 1.0,
+        "duration": 3.0,
+        "anim_duration": 1
+    },
+    {
+        "text": "Теперь ты можешь говорить со мной через микрофон! Просто скажи что-нибудь, и я отвечу тебе голосом и эмоциями. Удачи)",
+        "emotion": "talking",
+        "talking_emotion": "neutral",
+        "mouth_speed": 0.7,
+        "duration": 5.0,
+        "anim_duration": 1
+    },
+]
 
 # Конфигурация
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_API_KEY = "" # Ключ для доступа к OpenRouter API
-MODEL_NAME = "nousresearch/deephermes-3-mistral-24b-preview:free"
-ROBOT_VOICE_EFFECT = 70 # Управляет "тоном" голоса
+OPENROUTER_API_KEY = ""
+MODEL_NAME = "deepseek/deepseek-chat" #"nousresearch/deephermes-3-mistral-24b-preview:free"
+ROBOT_VOICE_EFFECT = 70 # Чем выше значение, тем "тоньше" и более синтетический голос
 
-TTS_MODE = "gtts" # Можно использовать "gtts" или "elevenlabs"
-ROBOT_VOICE_LANG = "ru" # Язык голоса
+TTS_MODE = "gtts"
+ROBOT_VOICE_LANG = "ru"
 TEMP_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "temp") # Путь к папке для временных файлов
+
 
 if not os.path.exists(TEMP_AUDIO_DIR):
     os.makedirs(TEMP_AUDIO_DIR)
 
 pygame.mixer.init()
 
-recognizer = sr.Recognizer()
 ser = serial.Serial('COM5', 115200, timeout=1)
 time.sleep(2)
-
-EMOTIONS = [
-    "neutral", "angry_talking", "smile", "smile_love",
-    "embarrassed", "scary", "happy", "sad",
-    "surprise", "happy_circle", "talking"
-]
+if HAS_MODE_AI:
+    recognizer = sr.Recognizer()
 
 TALKING_EMOTIONS = ["talking"]
 FINAL_EMOTIONS = ["neutral"]
@@ -72,7 +138,7 @@ def apply_robot_effect(wav_path):
     wavfile.write(robot_wav_path, sample_rate, robotized)
     return robot_wav_path
 
-def speak_and_send(text, ser, emotion, intensity=1.0, volume=1.0, mouth_speed=0.2):
+def speak_and_send(text, ser, emotion, talking_emotion="neutral", intensity=1.0, volume=1.0, mouth_speed=0.2, sync=False, send_serial=True):
     if not text.strip():
         return
 
@@ -92,18 +158,18 @@ def speak_and_send(text, ser, emotion, intensity=1.0, volume=1.0, mouth_speed=0.
 
             real_duration = get_wav_duration(wav_path)
 
-            json_command = json.dumps({
-                "emotion": emotion if emotion in TALKING_EMOTIONS else "talking",
-                "talking_emotion": emotion,
-                "text": text,
-                "mouth_speed": mouth_speed,
-                "duration": real_duration,
-                "intensity": intensity,
-                "volume": volume
-            }, ensure_ascii=False)
-
-            ser.write((json_command + "\r\n").encode('utf-8'))
-            print(f"Sent: {json_command}")
+            if send_serial:
+                json_command = json.dumps({
+                    "emotion": emotion if emotion in TALKING_EMOTIONS else "talking",
+                    "talking_emotion": talking_emotion,
+                    "text": text,
+                    "mouth_speed": mouth_speed,
+                    "duration": real_duration,
+                    "intensity": intensity,
+                    "volume": volume
+                })
+                ser.write((json_command + "\r\n").encode('utf-8'))
+                print(f"Sent: {json_command}")
 
             pygame.mixer.music.load(wav_path)
             pygame.mixer.music.play()
@@ -120,16 +186,20 @@ def speak_and_send(text, ser, emotion, intensity=1.0, volume=1.0, mouth_speed=0.
             if os.path.exists(wav_path):
                 os.remove(wav_path)
 
-            try:
-                response = ser.readline().decode('utf-8').strip()
-                print(f"Response: {response}")
-            except Exception as e:
-                print(f"[ERROR] Reading response: {e}")
+            if send_serial:
+                try:
+                    response = ser.readline().decode('utf-8').strip()
+                    print(f"Response: {response}")
+                except Exception as e:
+                    print(f"[ERROR] Reading response: {e}")
 
         except Exception as e:
             print(f"[gTTS ERROR] {e}")
 
-    threading.Thread(target=process).start()
+    if sync:
+        process()
+    else:
+        threading.Thread(target=process).start()
 
 def detect_emotion_simple(text):
     if not text:
@@ -178,18 +248,20 @@ def detect_emotion_simple(text):
 
 def get_emotion_from_context(text):
     emotion = detect_emotion_simple(text)
-
+    # Определяем talking_emotion на основе emotion (оставляем только допустимые значения)
+    allowed_talking_emotions = ["neutral", "angry", "smile_tricky", "tricky", "smile", "ha"]
+    talking_emotion = emotion if emotion in allowed_talking_emotions else "neutral"
     prompt = f"""
-Ты — дружелюбный виртуальный собеседник. Пользователь говорит с эмоцией: {emotion}.
-Ответь коротко и естественно на русском в этом настроении.
-Фраза пользователя: "{text}"
+    Ты — злой виртуальный собеседник. Пользователь говорит с эмоцией: {emotion}.
+    Ответь коротко и естественно на русском в этом настроении.
+    Фраза пользователя: \"{text}\"
 
-Ответь ТОЛЬКО в формате JSON без лишнего текста:
-{{
-    "emotion": "{emotion}",
-    "text": "твой ответ здесь"
-}}
-"""
+    Ответь ТОЛЬКО в формате JSON без лишнего текста:
+    {{
+        \"emotion\": \"{emotion}\",
+        \"text\": \"твой ответ здесь\"
+    }}
+    """
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -212,13 +284,17 @@ def get_emotion_from_context(text):
         if match:
             emotion_data = json.loads(match.group())
             if "text" in emotion_data:
-                result = {"emotion": emotion, "text": emotion_data["text"]}
+                result = {"emotion": emotion, "talking_emotion": talking_emotion, "text": emotion_data["text"]}
                 print(f"✨ Final response: {result}")
                 return result
-    except Exception as e:
-        print(f"🔴 Ошибка при запросе к OpenRouter: {e}")
+    except HTTPError as e:
+        if hasattr(response, 'status_code') and response.status_code == 429:
+            print("Превышен лимит запросов к AI. Попробуйте позже.")
+            return {"emotion": emotion, "talking_emotion": "angry", "text": "Лимит запросов к OpenRouter превышен. Попробуйте позже."}
+        else:
+            print(f"🔴 Ошибка при запросе к OpenRouter: {e}")
 
-    return {"emotion": emotion, "text": "Что-то пошло не так, попробуй повторить!"}
+    return {"emotion": emotion, "talking_emotion": "tricky", "text": "Что-то пошло не так, попробуй повторить!"}
 
 def recognize_speech():
     try:
@@ -247,11 +323,87 @@ initial = ser.readline().decode('utf-8').strip()
 print(f"Initial: {initial}")
 ser.write((json.dumps({"emotion": "neutral", "duration": 2.0, "intensity": 1.0, "volume": 0.3}) + "\r\n").encode('utf-8'))
 
-input_choice = input("🎙️ Использовать микрофон? (да/нет): ").lower()
-use_mic = input_choice == "да"
+if HAS_MODE_AI:
+    input_choice = input("🎙️ Использовать микрофон? (да/нет): ").lower()
+    use_mic = input_choice == "да"
+else:
+    use_mic = False
+
+if not HAS_MODE_AI:
+    for audio_entry in AUDIO_TEXT_MAP:
+        text = audio_entry.get("text", "Текст не задан")
+        emotion = audio_entry["emotion"]
+        talking_emotion = audio_entry.get("talking_emotion", "neutral")
+        mouth_speed = audio_entry.get("mouth_speed", 1.5)
+        anim_duration = audio_entry.get("anim_duration", 0.5)
+        duration = audio_entry.get("duration", 1.0)
+
+        try:
+            # 1. Сгенерировать аудиофайл и узнать duration
+            tts = gTTS(text=text, lang=ROBOT_VOICE_LANG, slow=False)
+            unique_id = uuid.uuid4().hex
+            mp3_path = os.path.join(TEMP_AUDIO_DIR, f"robot_voice_{unique_id}.mp3")
+            wav_path = os.path.join(TEMP_AUDIO_DIR, f"robot_voice_{unique_id}.wav")
+            tts.save(mp3_path)
+            audio = AudioSegment.from_mp3(mp3_path)
+            audio.export(wav_path, format="wav")
+            wav_path = apply_robot_effect(wav_path)
+            real_duration = get_wav_duration(wav_path)
+
+            # 2. Отправить команду с duration
+            if emotion == "talking":
+                send_duration = real_duration
+            else:
+                send_duration = duration
+            json_command = json.dumps({
+                "emotion": emotion,
+                "talking_emotion": talking_emotion,
+                "text": text,
+                "mouth_speed": mouth_speed,
+                "duration": send_duration,
+                "anim_duration": anim_duration,
+                "intensity": 1.0,
+                "volume": 1.0
+            })
+            ser.write((json_command + "\r\n").encode('utf-8'))
+            print(f"Sent___: {json_command}")
+
+            # 3. Сразу воспроизвести аудио (без sleep)
+            pygame.mixer.music.load(wav_path)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.1)
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
+            pygame.mixer.init()
+
+            # После воспроизведения аудио, удалить все файлы из TEMP_AUDIO_DIR
+            try:
+                for fname in os.listdir(TEMP_AUDIO_DIR):
+                    fpath = os.path.join(TEMP_AUDIO_DIR, fname)
+                    if os.path.isfile(fpath):
+                        os.remove(fpath)
+            except Exception as e:
+                print(f"[ERROR] Cleaning temp dir: {e}")
+
+            # 5. Дождаться ответа от RP2040 (если нужно)
+            try:
+                response = ser.readline().decode('utf-8').strip()
+                print(f"Response: {response}")
+            except Exception as e:
+                print(f"[ERROR] Reading response: {e}")
+
+            # 6. Пауза между эмоциями
+            time.sleep(duration)
+        except Exception as e:
+            print(f"[ERROR] Audio/Emotion sync: {e}")
+
+    ser.close()
+    print("Программа завершена.")
+    exit(0)
 
 while True:
-    if use_mic:
+    if HAS_MODE_AI and use_mic:
         user_input = recognize_speech()
     else:
         user_input = input("> ")
@@ -263,13 +415,14 @@ while True:
 
     emotion_data = get_emotion_from_context(user_input)
     emotion = emotion_data["emotion"]
+    talking_emotion = emotion_data.get("talking_emotion", "neutral")
     llama_response = emotion_data["text"]
 
     print(f"\n🟢 Эмоция: {emotion}")
     print(f"🟢 Ответ: {llama_response}")
-
+    mouth_speed = max(0.1, min(0.5, 0.1 + (len(llama_response) / 50)))
     if llama_response:
-        speak_and_send(llama_response, ser, emotion)
+        speak_and_send(llama_response, ser, emotion, talking_emotion=talking_emotion, intensity=1.0, volume=1.0, mouth_speed=mouth_speed)
         final_emotion = random.choice(FINAL_EMOTIONS)
         ser.write((json.dumps({"emotion": final_emotion, "duration": 2.0, "intensity": 1.0, "volume": 0.2}) + "\r\n").encode('utf-8'))
     else:
@@ -277,6 +430,5 @@ while True:
 
     response = ser.readline().decode('utf-8').strip()
     print(f"Response: {response}")
-
 ser.close()
 print("Программа завершена.")
