@@ -14,6 +14,10 @@
       <td><img src="assets/photo_1.jpg" alt="Фото 1" width="250"/></td>
       <td><img src="assets/photo_2.jpg" alt="Фото 2" width="250"/></td>
       <td><img src="assets/photo_3.jpg" alt="Фото 3" width="250"/></td>
+       <td><img src="assets/photo_4.jpg" alt="Фото 4" width="250"/></td>
+      <td><img src="assets/photo_5.jpg" alt="Фото 5" width="250"/></td>
+      <td><img src="assets/photo_6.jpg" alt="Фото 6" width="250"/></td>
+      <td><img src="assets/photo_7.jpg" alt="Фото 7" width="250"/></td>
     </tr>
   </table>
 </div>
