@@ -31,13 +31,6 @@ flowchart TD
     E -- "JSON-команда" --> F
     F --> G
 ```
-
-3. **Сохраните файл.**
-
-> Для отображения схемы прямо в GitHub, используйте расширения для браузера (например, [Mermaid Chrome Extension](https://chrome.google.com/webstore/detail/mermaid-diagrams/phfcghedmopjadpojhmmaffjmfiakfil)) или просматривайте README через редакторы, поддерживающие Mermaid (например, VS Code с расширением Mermaid).
-
-Хотите, чтобы я сам добавил этот блок в ваш `README.md`?
-
 ## Фото Mr. PICO
 
 <div align="center">
